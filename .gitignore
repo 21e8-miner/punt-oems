@@ -1,0 +1,25 @@
+# State and journals
+oems_journal.jsonl
+oems_state.json
+*.tmp
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environments
+.venv/
+env/
+venv/
+
+# Solana CLI and private keypairs
+id.json
+*.key
+*.pem
+*.secret
+
+# OS metadata
+.DS_Store
+Thumbs.db

@@ -1,0 +1,3 @@
+# Paper mode runs on the Python standard library with zero external dependencies.
+# Live execution mode requires solders for local Solana keypair loading and transaction signing:
+solders>=0.21.0
