@@ -1,82 +1,387 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Punt OEMS — Live Solana Execution & Scanner</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Punt OEMS — Rare UI Adaptive Execution & Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #e9edf2;
-      background: #0b0d10;
-      --panel: #11151a;
-      --card: #0d1116;
-      --border: #242b33;
-      --border-light: #343a40;
-      --muted: #87929e;
-      --good: #78c99a;
-      --warn: #e0b967;
-      --bad: #e47e7e;
-      --cyan: #52c5ff;
+      --bg: #030304;
+      --panel: #0b0b0e;
+      --panel-elevated: #111116;
+      --card: rgba(255, 255, 255, 0.025);
+      --card-hover: rgba(255, 255, 255, 0.045);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.14);
+      --txt: #f4f4f5;
+      --muted: #a1a1aa;
+      --muted-dark: #71717a;
+      --accent: #fc4c01;
+      --accent-glow: rgba(252, 76, 1, 0.25);
+      --accent-hover: #ff601c;
+      --good: #10b981;
+      --good-bg: rgba(16, 185, 129, 0.1);
+      --good-border: rgba(16, 185, 129, 0.25);
+      --warn: #f59e0b;
+      --warn-bg: rgba(245, 158, 11, 0.1);
+      --warn-border: rgba(245, 158, 11, 0.25);
+      --bad: #ef4444;
+      --bad-bg: rgba(239, 68, 68, 0.1);
+      --bad-border: rgba(239, 68, 68, 0.25);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; }
-    .wrap { max-width: 1500px; margin: auto; padding: 18px; }
-    .top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 12px; }
-    .brand-group { display: flex; flex-direction: column; gap: 4px; }
-    .brand { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
-    .brand span { color: var(--cyan); font-weight: 700; font-size: 14px; letter-spacing: 0.05em; }
-    .status-sub { font-size: 12px; color: var(--muted); }
-    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .btn-link {
-      display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-      padding: 7px 12px; border-radius: 8px; text-decoration: none; border: 1px solid var(--border-light);
-      background: #141b22; color: #e9edf2; transition: all 0.15s ease;
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(252, 76, 1, 0.07), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(16, 185, 129, 0.03), transparent 60%);
+      color: var(--txt);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
     }
-    .btn-link:hover { background: #1c242d; border-color: #485461; }
-    .btn-link.primary { border-color: #276853; background: #0c2b20; color: #6ee7b7; }
-    .btn-link.primary:hover { background: #11382b; border-color: #34886d; }
-    .live-badge {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
-      border-radius: 8px; font-size: 11px; font-weight: 600; border: 1px solid #233527;
-      background: #0f1c13; color: var(--good);
+    .wrap {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
     }
-    .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 14px; margin-top: 10px; }
-    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
-    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .card { background: var(--card); border: 1px solid #1f252d; border-radius: 10px; padding: 11px; }
-    .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .v { font-size: 20px; font-weight: 700; margin-top: 3px; }
-    .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    /* Rare UI Navigation Bar */
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #fc4c01, #ff7a3d);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px var(--accent-glow);
+      color: white;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: rgba(252, 76, 1, 0.12);
+      border: 1px solid rgba(252, 76, 1, 0.28);
+      color: #ff601c;
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pill-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      backdrop-filter: blur(12px);
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--good);
+      box-shadow: 0 0 10px var(--good);
+      animation: rare-pulse 2s infinite;
+    }
+    @keyframes rare-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .btn-rare {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--txt);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+    .btn-rare:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+    .btn-rare.primary {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 2px 14px rgba(255, 255, 255, 0.15);
+    }
+    .btn-rare.primary:hover {
+      background: #e4e4e7;
+      border-color: #e4e4e7;
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
+    }
+    .btn-rare.accent {
+      background: linear-gradient(135deg, #fc4c01, #ff601c);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 18px var(--accent-glow);
+    }
+    .btn-rare.accent:hover {
+      background: linear-gradient(135deg, #ff550a, #ff6e2d);
+      box-shadow: 0 6px 24px rgba(252, 76, 1, 0.4);
+    }
+    /* Rare UI Announcement banner */
+    .banner {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .banner-left { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .banner-left strong { color: var(--txt); }
+    /* Layout Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    /* Rare UI Stat Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+    }
+    .k {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-dark);
+    }
+    .v {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-top: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    /* Badges & Indicators */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.good { background: var(--good-bg); color: var(--good); border: 1px solid var(--good-border); }
+    .badge.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+    .badge.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad-border); }
+    /* Form controls */
+    .form {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--txt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 0 1px var(--accent), 0 0 16px -2px var(--accent-glow);
+    }
     .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    label { font-size: 11px; color: #98a4af; display: block; margin-bottom: 3px; }
-    input, select, button { width: 100%; background: #080b0e; color: #e9edf2; border: 1px solid #2c343d; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; }
-    input:focus, select:focus { outline: none; border-color: var(--cyan); }
-    button { cursor: pointer; font-weight: 600; transition: background 0.15s; }
-    button:hover { background: #1a222c; }
-    button.primary { background: #eef2f5; color: #111; border-color: #eef2f5; font-weight: 700; }
-    button.primary:hover { background: #ffffff; }
-    button.danger { border-color: #713b3b; background: #261214; color: #f87171; }
-    button.danger:hover { background: #3b191c; }
-    button.small { width: auto; padding: 6px 10px; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #1f252d; }
-    th { color: #8995a0; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+    /* Action Buttons */
+    button.btn-action {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--txt);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button.btn-action:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--border-light);
+    }
+    button.btn-action.primary {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      font-weight: 700;
+    }
+    button.btn-action.primary:hover {
+      background: #e4e4e7;
+    }
+    button.btn-action.danger {
+      background: var(--bad-bg);
+      border-color: var(--bad-border);
+      color: var(--bad);
+    }
+    button.btn-action.danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    th {
+      color: var(--muted-dark);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+    .scroll {
+      max-height: 290px;
+      overflow-y: auto;
+    }
+    .scroll::-webkit-scrollbar { width: 4px; }
+    .scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 9999px; }
+    .mono { font-family: var(--font-mono); font-size: 11px; }
     .good { color: var(--good); }
     .warn { color: var(--warn); }
     .bad { color: var(--bad); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    .status { font-size: 12px; color: #9aa6b2; }
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .scroll { max-height: 280px; overflow-y: auto; }
-    .banner-note {
-      background: #0f1620; border: 1px solid #1b2838; border-radius: 8px; padding: 8px 12px;
-      font-size: 12px; color: #8ecae6; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
-    }
-    @media(max-width: 960px) {
+    /* Rare UI animated counter look */
+    .tabular { font-variant-numeric: tabular-nums; }
+    @media(max-width: 980px) {
       .grid, .split { grid-template-columns: 1fr; }
       .cards { grid-template-columns: repeat(2, 1fr); }
       .form { grid-template-columns: repeat(2, 1fr); }
@@ -84,98 +389,129 @@
     @media(max-width: 600px) {
       .cards { grid-template-columns: 1fr; }
       .form { grid-template-columns: 1fr; }
+      .top { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
 <body>
 <div class="wrap">
+  <!-- Top Navigation with Rare UI Style -->
   <div class="top">
     <div class="brand-group">
-      <div class="brand">Punt OEMS <span>/ LIVE WEB SCANNER</span></div>
-      <div class="status-sub">Real-time Solana telemetry + adaptive execution planner. Zero installation required in browser.</div>
+      <div class="brand-icon">P</div>
+      <div>
+        <div class="brand-title">
+          Punt OEMS
+          <span class="brand-badge">Adaptive Engine</span>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:2px;">
+          Solana Token-2022 telemetry & minimal-footprint execution router
+        </div>
+      </div>
     </div>
     <div class="top-actions">
-      <div id="modeBadge" class="live-badge">
-        <span class="pulse-dot"></span> <span id="modeText">BROWSER PAPER SIMULATOR</span>
+      <div id="modeBadge" class="pill-status">
+        <span class="pulse-dot"></span>
+        <span id="modeText">BROWSER PAPER SIMULATOR</span>
       </div>
-      <a class="btn-link primary" href="https://github.com/21e8-miner/punt-oems/releases/latest/download/punt_oems_bundle.zip" download>
-        ⬇ Download Bundle (.zip)
+      <a class="btn-rare primary" href="https://github.com/21e8-miner/punt-oems/releases/latest/download/punt_oems_bundle.zip" download>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Bundle
       </a>
-      <a class="btn-link" href="https://github.com/21e8-miner/punt-oems" target="_blank" rel="noopener">
-        GitHub Repo
+      <a class="btn-rare" href="https://github.com/21e8-miner/punt-oems" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
       </a>
-      <a class="btn-link" href="https://github.com/21e8-miner/punt-oems/releases/tag/v1.0.0" target="_blank" rel="noopener">
-        Release v1.0.0
+      <a class="btn-rare" href="https://github.com/21e8-miner/punt-oems/releases/tag/v1.0.0" target="_blank" rel="noopener">
+        v1.0.0
       </a>
     </div>
   </div>
 
-  <div class="banner-note">
-    <span>💡 <strong>Standalone Browser Mode</strong>: Live real-time pricing from DexScreener, GeckoTerminal & Jupiter. Run <code>python3 punt_oems.py</code> locally on port 8770 for hardware/CLI signing.</span>
-    <span id="daemonStatus" class="mono" style="font-size:11px;color:#94a3b8">Checking local daemon...</span>
+  <!-- Rare UI Notification Banner -->
+  <div class="banner">
+    <div class="banner-left">
+      <span style="color:var(--accent); font-weight:700;">●</span>
+      <span><strong>Live Client Mode</strong>: Pure browser-to-RPC telemetry. Starts in safe paper simulation mode.</span>
+    </div>
+    <div id="daemonStatus" class="mono" style="color:var(--muted);">Checking local daemon...</div>
   </div>
 
   <div class="grid">
+    <!-- Left Column: Scanner & Order Ticket -->
     <div>
       <div class="panel">
-        <div class="row" style="justify-content:space-between">
-          <div class="row">
-            <select id="symbol" onchange="onSymbolChange()" style="max-width:200px">
-              <option value="ZCAT">ZCAT</option>
-              <option value="BTCAT">Buy The Cat (BTC)</option>
-              <option value="CUSTOM">Custom Mint...</option>
-            </select>
-            <button class="small" onclick="refreshMarket()">Refresh</button>
-            <button class="small" onclick="fetchDepthCurve()">Depth curve</button>
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Market Telemetry
           </div>
-          <div id="lastSync" class="sub mono">—</div>
+          <div id="lastSync" class="mono" style="color:var(--muted-dark); font-size:11px;">—</div>
         </div>
 
-        <div id="customMintRow" class="row" style="margin-top:10px; display:none;">
-          <input id="customMintInput" placeholder="Enter Solana Token Mint Address (e.g. HcRLc9...)" style="flex:1">
-          <button class="small primary" onclick="loadCustomMint()">Load</button>
+        <div class="row" style="margin-bottom:12px;">
+          <select id="symbol" onchange="onSymbolChange()" style="max-width:220px; font-weight:600;">
+            <option value="ZCAT">ZCAT (Token-2022)</option>
+            <option value="BTCAT">Buy The Cat (BTC)</option>
+            <option value="CUSTOM">Custom Mint...</option>
+          </select>
+          <button class="btn-action" onclick="refreshMarket()">Refresh</button>
+          <button class="btn-action primary" onclick="fetchDepthCurve()">Live Depth Curve</button>
         </div>
 
-        <div class="cards" style="margin-top:10px">
+        <div id="customMintRow" class="row" style="margin-bottom:12px; display:none;">
+          <input id="customMintInput" placeholder="Enter Solana Token Mint Address..." style="flex:1;">
+          <button class="btn-action primary" onclick="loadCustomMint()">Load</button>
+        </div>
+
+        <div class="cards">
           <div class="card">
-            <div class="k">Price</div>
-            <div id="price" class="v">—</div>
+            <div class="k">Live Price</div>
+            <div id="price" class="v tabular">—</div>
             <div id="div" class="sub"></div>
           </div>
           <div class="card">
-            <div class="k">Market cap</div>
-            <div id="mc" class="v">—</div>
+            <div class="k">Market Cap</div>
+            <div id="mc" class="v tabular">—</div>
             <div id="tmc" class="sub"></div>
           </div>
           <div class="card">
             <div class="k">Liquidity</div>
-            <div id="liq" class="v">—</div>
+            <div id="liq" class="v tabular">—</div>
             <div id="lmc" class="sub"></div>
           </div>
           <div class="card">
-            <div class="k">5m / 1h volume</div>
-            <div id="vol" class="v">—</div>
+            <div class="k">5m / 1h Volume</div>
+            <div id="vol" class="v tabular">—</div>
             <div id="fee" class="sub"></div>
           </div>
         </div>
 
-        <div class="split" style="margin-top:10px">
+        <div class="split">
           <div class="card">
             <div class="k">Token-2022 Mechanism</div>
-            <div id="tax" class="v">—</div>
+            <div id="tax" class="v tabular">—</div>
             <div id="authority" class="sub mono"></div>
           </div>
           <div class="card">
             <div class="k">Route Guard</div>
-            <div id="guard" class="v">—</div>
-            <div class="sub">DexScreener + GeckoTerminal + Jupiter quote</div>
+            <div id="guard" class="v" style="font-size:20px;">—</div>
+            <div class="sub">DexScreener + Gecko + Jupiter validation</div>
           </div>
         </div>
       </div>
 
-      <div class="panel" style="margin-top:14px">
-        <div class="k">Order Ticket (Adaptive Execution)</div>
-        <div class="form" style="margin-top:9px">
+      <!-- Order Ticket Section -->
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Adaptive Execution Ticket
+          </div>
+          <span style="font-size:11px; color:var(--muted);">Dynamic slice halving & cadence jitter</span>
+        </div>
+
+        <div class="form">
           <div>
             <label>Side</label>
             <select id="side"><option>BUY</option><option>SELL</option></select>
@@ -189,11 +525,11 @@
             <select id="algo"><option>ADAPTIVE</option><option>TWAP</option><option>IMMEDIATE</option></select>
           </div>
           <div>
-            <label>Max impact (bps)</label>
+            <label>Max Impact (bps)</label>
             <input id="impact" type="number" value="50">
           </div>
           <div>
-            <label>Max share of 5m volume (%)</label>
+            <label>Max % of 5m Volume</label>
             <input id="part" type="number" step="0.1" value="2.0">
           </div>
           <div>
@@ -201,56 +537,95 @@
             <input id="duration" type="number" value="30">
           </div>
           <div>
-            <label>Min child ($)</label>
+            <label>Min Child ($)</label>
             <input id="minslice" type="number" value="250">
           </div>
           <div>
-            <label>Max child ($)</label>
+            <label>Max Child ($)</label>
             <input id="maxslice" type="number" value="5000">
           </div>
           <div>
-            <label>Max adverse move (%)</label>
+            <label>Max Adverse Move (%)</label>
             <input id="adverse" type="number" step="0.1" value="2.5">
           </div>
         </div>
-        <div class="row" style="margin-top:10px">
-          <button class="primary" onclick="previewPlan()">Preview plan</button>
-          <input id="liveword" placeholder="LIVE (only when connected to --live daemon)" style="max-width:280px">
-          <button class="danger" onclick="killAll()">Kill all</button>
+
+        <div class="row" style="margin-top:14px;">
+          <button class="btn-action primary" onclick="previewPlan()">Preview Plan</button>
+          <input id="liveword" placeholder="LIVE (only when connected to --live daemon)" style="max-width:290px;">
+          <button class="btn-action danger" onclick="killAll()">Kill All</button>
         </div>
-        <div id="preview" class="status" style="margin-top:9px"></div>
+        <div id="preview" style="margin-top:10px; font-size:12px; color:var(--muted);"></div>
       </div>
 
-      <div class="panel" style="margin-top:14px">
-        <div class="k">Depth / Footprint Curve (Jupiter Live Quotes)</div>
-        <div id="depth" class="scroll" style="margin-top:8px">
-          <div class="sub">Click "Depth curve" above to compute real-time price impact slices.</div>
+      <!-- Live Depth Curve -->
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Live Footprint Curve (Jupiter Lite Quotes)
+          </div>
+          <span style="font-size:11px; color:var(--muted);">Real-time price impact slices</span>
+        </div>
+        <div id="depth" class="scroll">
+          <div class="sub" style="padding:8px 0;">Click "Live Depth Curve" above to calculate real-time impact slices.</div>
         </div>
       </div>
     </div>
 
+    <!-- Right Column: Plans, Fills & Safeguards -->
     <div>
       <div class="panel">
-        <div class="k">Active Plans</div>
-        <div id="plans" class="scroll" style="margin-top:8px"></div>
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+            Execution Plans
+          </div>
+          <span id="planCount" class="mono" style="font-size:11px; color:var(--muted);">0 active</span>
+        </div>
+        <div id="plans" class="scroll"></div>
       </div>
-      <div class="panel" style="margin-top:14px">
-        <div class="k">Fill Tape (Paper / Live)</div>
-        <div id="fills" class="scroll" style="margin-top:8px"></div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Child Order Fill Tape
+          </div>
+          <span class="mono" style="font-size:11px; color:var(--muted);">Paper / Live</span>
+        </div>
+        <div id="fills" class="scroll"></div>
       </div>
-      <div class="panel" style="margin-top:14px">
-        <div class="k">Execution Safeguards</div>
-        <div class="status" style="line-height:1.6; margin-top:6px">
-          Punt OEMS asks 6 essential questions before executing <em>each child order</em>:
-          <ul style="margin:6px 0 6px 18px; padding:0">
-            <li>Is liquidity &gt; $250K floor?</li>
-            <li>Is DexScreener / GeckoTerminal divergence &lt; 5%?</li>
-            <li>Has Token-2022 transfer fee altered?</li>
-            <li>Has price drifted &gt; 2.5% from arrival price?</li>
-            <li>Is child quote inside maximum impact budget?</li>
-            <li>Did Jupiter order deteriorate before signing?</li>
-          </ul>
-          If any condition is violated, the plan pauses immediately rather than chasing.
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Pre-Child Safeguard Verification
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.6; color:var(--muted);">
+          Before firing <em>every individual child</em>, Punt OEMS inspects:
+          <div style="display:grid; grid-template-columns:1fr; gap:6px; margin-top:8px;">
+            <div class="card" style="padding:8px 12px; font-size:11px;">
+              <span class="good">✓</span> <strong>Liquidity Floor</strong>: Rejects execution if pool liquidity &lt; $250K.
+            </div>
+            <div class="card" style="padding:8px 12px; font-size:11px;">
+              <span class="good">✓</span> <strong>Source Divergence</strong>: Pauses if DexScreener & Gecko diverge &gt; 5%.
+            </div>
+            <div class="card" style="padding:8px 12px; font-size:11px;">
+              <span class="good">✓</span> <strong>Token-2022 State</strong>: Halts immediately if transfer tax alters from expected bps.
+            </div>
+            <div class="card" style="padding:8px 12px; font-size:11px;">
+              <span class="good">✓</span> <strong>Adverse Move Drift</strong>: Pauses if price runaway exceeds 2.5% from arrival.
+            </div>
+            <div class="card" style="padding:8px 12px; font-size:11px;">
+              <span class="good">✓</span> <strong>Impact Budget Slicing</strong>: Halves child size until live quote satisfies limit.
+            </div>
+            <div class="card" style="padding:8px 12px; font-size:11px;">
+              <span class="good">✓</span> <strong>Pre-Sign Deterioration Guard</strong>: Refuses to sign if execution deteriorated between quote & signing.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -287,7 +662,6 @@ let currentMarket = null;
 let currentCurve = [];
 let localDaemonAvailable = false;
 
-// Client-side storage for paper plans and fills
 let localPlans = JSON.parse(localStorage.getItem("punt_oems_plans") || "{}");
 let localFills = JSON.parse(localStorage.getItem("punt_oems_fills") || "[]");
 
@@ -300,14 +674,16 @@ async function checkLocalDaemon() {
       $('daemonStatus').textContent = "● Connected to local Python daemon (127.0.0.1:8770)";
       $('daemonStatus').style.color = "var(--good)";
       $('modeText').textContent = data.live ? "LIVE DAEMON · " + (data.pubkey || '') : "LOCAL DAEMON (PAPER)";
-      $('modeBadge').style.borderColor = data.live ? "#713b3b" : "#233527";
-      $('modeBadge').style.color = data.live ? "#f87171" : "var(--good)";
+      $('modeBadge').style.borderColor = data.live ? "var(--bad)" : "var(--good-border)";
+      $('modeBadge').style.color = data.live ? "var(--bad)" : "var(--good)";
       renderPlansAndFills(data.plans || {}, data.fills || []);
       return true;
     }
   } catch (e) {}
   localDaemonAvailable = false;
   $('daemonStatus').textContent = "○ Standalone Web Client";
+  $('modeBadge').style.borderColor = "var(--border)";
+  $('modeBadge').style.color = "var(--muted)";
   renderPlansAndFills(localPlans, localFills);
   return false;
 }
@@ -371,23 +747,20 @@ async function fetchToken2022State(mint) {
       transferFee: feeBps != null ? { bps: feeBps, configAuthority: configAuth, maximumFeeRaw: maxFeeRaw } : null
     };
   } catch (e) {
-    console.warn("RPC fetch failed:", e);
     return null;
   }
 }
 
 async function refreshMarket() {
-  $('guard').textContent = "FETCHING...";
+  $('guard').textContent = "CHECKING...";
   $('guard').className = "v warn";
   try {
-    // 1. DexScreener
     const dexRes = await fetchJson(`https://api.dexscreener.com/token-pairs/v1/solana/${currentMint}`);
     const pairs = (dexRes || []).filter(p => p.chainId === "solana");
     const bestDex = pairs.sort((a,b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0] || {};
     const isBase = (bestDex.baseToken?.address || "") === currentMint;
     const price = isBase ? Number(bestDex.priceUsd) : (Number(bestDex.priceUsd) / (Number(bestDex.priceNative) || 1));
 
-    // 2. GeckoTerminal
     let geckoPrice = null;
     try {
       const geckoRes = await fetchJson(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${currentMint}/pools?page=1`);
@@ -399,9 +772,7 @@ async function refreshMarket() {
       }
     } catch (e) {}
 
-    // 3. Token-2022 RPC state
     const contract = await fetchToken2022State(currentMint);
-
     const divergence = (price && geckoPrice) ? Math.abs(price / geckoPrice - 1) * 100 : null;
     const liq = Number(bestDex.liquidity?.usd || 0);
     const v5 = Number(bestDex.volume?.m5 || 0);
@@ -476,7 +847,7 @@ async function fetchDepthCurve() {
   }
   const side = $('side').value;
   const points = [250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
-  $('depth').innerHTML = `<div class="sub">Quoting live Jupiter routes for ${side} ${currentSymbol}...</div>`;
+  $('depth').innerHTML = `<div class="sub" style="padding:8px 0;">Quoting live Jupiter routes for ${side} ${currentSymbol}...</div>`;
 
   const dec = currentMarket?.contract?.decimals || 9;
   const rows = [];
@@ -486,7 +857,7 @@ async function fetchDepthCurve() {
       let q;
       let eff;
       if (side === "BUY") {
-        const inRaw = usd * 1e6; // USDC
+        const inRaw = usd * 1e6;
         q = await quoteJupiter(USDC, currentMint, inRaw);
         const outTok = q.outAmount / 10**dec;
         eff = outTok > 0 ? (usd / outTok) : null;
@@ -504,9 +875,10 @@ async function fetchDepthCurve() {
   }
 
   currentCurve = rows;
-  let html = '<table><tr><th>USD</th><th>Impact</th><th>Effective</th><th>Route</th></tr>';
+  let html = '<table><tr><th>USD</th><th>Impact</th><th>Effective Price</th><th>Routing Hops</th></tr>';
   for (const r of rows) {
-    html += `<tr><td>${money(r.usd)}</td><td>${r.error ? '<span class="bad">ERR</span>' : (r.impactBps || 0).toFixed(1) + ' bps'}</td><td>${money(r.eff)}</td><td>${r.route || r.error || ''}</td></tr>`;
+    const impactClass = r.impactBps > 75 ? 'bad' : (r.impactBps > 35 ? 'warn' : 'good');
+    html += `<tr><td><strong>${money(r.usd)}</strong></td><td>${r.error ? '<span class="bad">ERR</span>' : `<span class="${impactClass}">${(r.impactBps || 0).toFixed(1)} bps</span>`}</td><td class="tabular">${money(r.eff)}</td><td class="sub">${r.route || r.error || ''}</td></tr>`;
   }
   html += '</table>';
   $('depth').innerHTML = html;
@@ -527,7 +899,6 @@ function previewPlan() {
   const duration = Number($('duration').value) || 30;
 
   let slice = maxSlice;
-  // Volume participation cap
   const v5 = currentMarket.volume5m || 0;
   if (v5 > 0) {
     slice = Math.min(slice, v5 * (maxPart / 100));
@@ -559,7 +930,7 @@ function previewPlan() {
     created: Date.now()
   };
 
-  $('preview').innerHTML = `Plan <span class="mono">#${pid}</span>: ${nSlices} child order${nSlices>1?'s':''}, target ${money(slice)} each, ~${interval}s cadence. <button class="small primary" onclick="startPlan('${pid}')">START</button>`;
+  $('preview').innerHTML = `Plan <span class="mono">#${pid}</span>: <strong>${nSlices}</strong> child orders, target <strong>${money(slice)}</strong> each, ~<strong>${interval}s</strong> cadence. <button class="btn-action primary" style="padding:4px 12px; margin-left:8px;" onclick="startPlan('${pid}')">START</button>`;
   
   if (!localDaemonAvailable) {
     localPlans[pid] = plan;
@@ -624,29 +995,29 @@ function saveLocalState() {
 
 function renderPlansAndFills(plans, fills) {
   const pList = Object.values(plans).sort((a,b) => (b.created||0) - (a.created||0));
+  $('planCount').textContent = pList.filter(p => p.status === 'WORKING').length + " working";
   let pHtml = '<table><tr><th>ID</th><th>Order</th><th>Status</th><th>Filled</th><th>Child</th><th>Action</th></tr>';
   for (const p of pList) {
-    pHtml += `<tr><td class="mono">#${p.id}</td><td>${p.side} ${p.symbol}<br>${money(p.notionalUsd)}</td><td><span class="${p.status==='WORKING'?'good':(p.status==='PAUSED'?'warn':'')}">${p.status}</span>${p.error?'<br><span class="bad">'+p.error+'</span>':''}</td><td>${money(p.filledUsd)} / ${money(p.notionalUsd)}</td><td>${money(p.sliceUsd)}<br>${p.intervalSec}s</td><td><button class="small" onclick="actPlan('${p.id}','PAUSED')">Pause</button> <button class="small danger" onclick="actPlan('${p.id}','CANCELED')">Cancel</button></td></tr>`;
+    const statusColor = p.status === 'WORKING' ? 'good' : (p.status === 'PAUSED' ? 'warn' : 'muted');
+    pHtml += `<tr><td class="mono">#${p.id}</td><td><strong>${p.side}</strong> ${p.symbol}<br><span class="tabular">${money(p.notionalUsd)}</span></td><td><span class="badge ${statusColor}">${p.status}</span>${p.error?'<br><span class="bad" style="font-size:10px;">'+p.error+'</span>':''}</td><td class="tabular">${money(p.filledUsd)} / ${money(p.notionalUsd)}</td><td class="tabular">${money(p.sliceUsd)}<br><span class="sub">${p.intervalSec}s</span></td><td><button class="btn-action" style="padding:4px 9px; font-size:10px;" onclick="actPlan('${p.id}','PAUSED')">Pause</button> <button class="btn-action danger" style="padding:4px 9px; font-size:10px; margin-left:4px;" onclick="actPlan('${p.id}','CANCELED')">Cancel</button></td></tr>`;
   }
   pHtml += '</table>';
-  $('plans').innerHTML = pList.length ? pHtml : '<div class="sub">No open plans.</div>';
+  $('plans').innerHTML = pList.length ? pHtml : '<div class="sub" style="padding:12px 0;">No plans created yet.</div>';
 
-  let fHtml = '<table><tr><th>Time</th><th>Fill</th><th>Impact</th><th>Route</th></tr>';
+  let fHtml = '<table><tr><th>Time</th><th>Order Fill</th><th>Impact</th><th>Route</th></tr>';
   for (const f of fills.slice(0, 50)) {
-    fHtml += `<tr><td>${new Date((f.time||Date.now()/1000)*1000).toLocaleTimeString()}</td><td><span class="good">${f.paper?'PAPER':'LIVE'}</span> ${f.side} ${f.symbol} ${money(f.usd)}</td><td>${(f.impactBps||0).toFixed(1)} bps</td><td>${f.route||''}</td></tr>`;
+    fHtml += `<tr><td class="sub">${new Date((f.time||Date.now()/1000)*1000).toLocaleTimeString()}</td><td><span class="badge good">${f.paper?'PAPER':'LIVE'}</span> <strong>${f.side}</strong> ${f.symbol} <span class="tabular">${money(f.usd)}</span></td><td class="tabular">${(f.impactBps||0).toFixed(1)} bps</td><td class="sub">${f.route||''}</td></tr>`;
   }
   fHtml += '</table>';
-  $('fills').innerHTML = fills.length ? fHtml : '<div class="sub">No fills recorded yet.</div>';
+  $('fills').innerHTML = fills.length ? fHtml : '<div class="sub" style="padding:12px 0;">No fills recorded yet.</div>';
 }
 
-// Browser paper execution engine
 setInterval(() => {
   if (localDaemonAvailable) return;
   const now = Date.now();
   for (const pid in localPlans) {
     const p = localPlans[pid];
     if (p.status === "WORKING" && (p.nextAction || 0) <= now) {
-      // Execute a paper slice
       const fillAmount = Math.min(p.sliceUsd, p.remainingUsd);
       const fill = {
         time: Math.floor(now / 1000),
@@ -655,7 +1026,7 @@ setInterval(() => {
         side: p.side,
         usd: fillAmount,
         paper: true,
-        impactBps: Math.random() * 25 + 10,
+        impactBps: Math.random() * 22 + 12,
         route: "Raydium CPMM → Orca Whirlpool"
       };
       localFills.unshift(fill);
