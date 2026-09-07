@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Punt OEMS — Live Solana Execution & Scanner</title>
+  <style>
+    :root {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e9edf2;
+      background: #0b0d10;
+      --panel: #11151a;
+      --card: #0d1116;
+      --border: #242b33;
+      --border-light: #343a40;
+      --muted: #87929e;
+      --good: #78c99a;
+      --warn: #e0b967;
+      --bad: #e47e7e;
+      --cyan: #52c5ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+    .wrap { max-width: 1500px; margin: auto; padding: 18px; }
+    .top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 12px; }
+    .brand-group { display: flex; flex-direction: column; gap: 4px; }
+    .brand { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+    .brand span { color: var(--cyan); font-weight: 700; font-size: 14px; letter-spacing: 0.05em; }
+    .status-sub { font-size: 12px; color: var(--muted); }
+    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn-link {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+      padding: 7px 12px; border-radius: 8px; text-decoration: none; border: 1px solid var(--border-light);
+      background: #141b22; color: #e9edf2; transition: all 0.15s ease;
+    }
+    .btn-link:hover { background: #1c242d; border-color: #485461; }
+    .btn-link.primary { border-color: #276853; background: #0c2b20; color: #6ee7b7; }
+    .btn-link.primary:hover { background: #11382b; border-color: #34886d; }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-radius: 8px; font-size: 11px; font-weight: 600; border: 1px solid #233527;
+      background: #0f1c13; color: var(--good);
+    }
+    .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 14px; margin-top: 10px; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .card { background: var(--card); border: 1px solid #1f252d; border-radius: 10px; padding: 11px; }
+    .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .v { font-size: 20px; font-weight: 700; margin-top: 3px; }
+    .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    label { font-size: 11px; color: #98a4af; display: block; margin-bottom: 3px; }
+    input, select, button { width: 100%; background: #080b0e; color: #e9edf2; border: 1px solid #2c343d; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; }
+    input:focus, select:focus { outline: none; border-color: var(--cyan); }
+    button { cursor: pointer; font-weight: 600; transition: background 0.15s; }
+    button:hover { background: #1a222c; }
+    button.primary { background: #eef2f5; color: #111; border-color: #eef2f5; font-weight: 700; }
+    button.primary:hover { background: #ffffff; }
+    button.danger { border-color: #713b3b; background: #261214; color: #f87171; }
+    button.danger:hover { background: #3b191c; }
+    button.small { width: auto; padding: 6px 10px; font-size: 11px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #1f252d; }
+    th { color: #8995a0; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .status { font-size: 12px; color: #9aa6b2; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .scroll { max-height: 280px; overflow-y: auto; }
+    .banner-note {
+      background: #0f1620; border: 1px solid #1b2838; border-radius: 8px; padding: 8px 12px;
+      font-size: 12px; color: #8ecae6; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+    }
+    @media(max-width: 960px) {
+      .grid, .split { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: repeat(2, 1fr); }
+      .form { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media(max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+      .form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand-group">
+      <div class="brand">Punt OEMS <span>/ LIVE WEB SCANNER</span></div>
+      <div class="status-sub">Real-time Solana telemetry + adaptive execution planner. Zero installation required in browser.</div>
+    </div>
+    <div class="top-actions">
+      <div id="modeBadge" class="live-badge">
+        <span class="pulse-dot"></span> <span id="modeText">BROWSER PAPER SIMULATOR</span>
+      </div>
+      <a class="btn-link primary" href="https://github.com/21e8-miner/punt-oems/releases/latest/download/punt_oems_bundle.zip" download>
+        ⬇ Download Bundle (.zip)
+      </a>
+      <a class="btn-link" href="https://github.com/21e8-miner/punt-oems" target="_blank" rel="noopener">
+        GitHub Repo
+      </a>
+      <a class="btn-link" href="https://github.com/21e8-miner/punt-oems/releases/tag/v1.0.0" target="_blank" rel="noopener">
+        Release v1.0.0
+      </a>
+    </div>
+  </div>
+
+  <div class="banner-note">
+    <span>💡 <strong>Standalone Browser Mode</strong>: Live real-time pricing from DexScreener, GeckoTerminal & Jupiter. Run <code>python3 punt_oems.py</code> locally on port 8770 for hardware/CLI signing.</span>
+    <span id="daemonStatus" class="mono" style="font-size:11px;color:#94a3b8">Checking local daemon...</span>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between">
+          <div class="row">
+            <select id="symbol" onchange="onSymbolChange()" style="max-width:200px">
+              <option value="ZCAT">ZCAT</option>
+              <option value="BTCAT">Buy The Cat (BTC)</option>
+              <option value="CUSTOM">Custom Mint...</option>
+            </select>
+            <button class="small" onclick="refreshMarket()">Refresh</button>
+            <button class="small" onclick="fetchDepthCurve()">Depth curve</button>
+          </div>
+          <div id="lastSync" class="sub mono">—</div>
+        </div>
+
+        <div id="customMintRow" class="row" style="margin-top:10px; display:none;">
+          <input id="customMintInput" placeholder="Enter Solana Token Mint Address (e.g. HcRLc9...)" style="flex:1">
+          <button class="small primary" onclick="loadCustomMint()">Load</button>
+        </div>
+
+        <div class="cards" style="margin-top:10px">
+          <div class="card">
+            <div class="k">Price</div>
+            <div id="price" class="v">—</div>
+            <div id="div" class="sub"></div>
+          </div>
+          <div class="card">
+            <div class="k">Market cap</div>
+            <div id="mc" class="v">—</div>
+            <div id="tmc" class="sub"></div>
+          </div>
+          <div class="card">
+            <div class="k">Liquidity</div>
+            <div id="liq" class="v">—</div>
+            <div id="lmc" class="sub"></div>
+          </div>
+          <div class="card">
+            <div class="k">5m / 1h volume</div>
+            <div id="vol" class="v">—</div>
+            <div id="fee" class="sub"></div>
+          </div>
+        </div>
+
+        <div class="split" style="margin-top:10px">
+          <div class="card">
+            <div class="k">Token-2022 Mechanism</div>
+            <div id="tax" class="v">—</div>
+            <div id="authority" class="sub mono"></div>
+          </div>
+          <div class="card">
+            <div class="k">Route Guard</div>
+            <div id="guard" class="v">—</div>
+            <div class="sub">DexScreener + GeckoTerminal + Jupiter quote</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="k">Order Ticket (Adaptive Execution)</div>
+        <div class="form" style="margin-top:9px">
+          <div>
+            <label>Side</label>
+            <select id="side"><option>BUY</option><option>SELL</option></select>
+          </div>
+          <div>
+            <label>Notional USD</label>
+            <input id="notional" type="number" value="5000">
+          </div>
+          <div>
+            <label>Mode</label>
+            <select id="algo"><option>ADAPTIVE</option><option>TWAP</option><option>IMMEDIATE</option></select>
+          </div>
+          <div>
+            <label>Max impact (bps)</label>
+            <input id="impact" type="number" value="50">
+          </div>
+          <div>
+            <label>Max share of 5m volume (%)</label>
+            <input id="part" type="number" step="0.1" value="2.0">
+          </div>
+          <div>
+            <label>Duration (min)</label>
+            <input id="duration" type="number" value="30">
+          </div>
+          <div>
+            <label>Min child ($)</label>
+            <input id="minslice" type="number" value="250">
+          </div>
+          <div>
+            <label>Max child ($)</label>
+            <input id="maxslice" type="number" value="5000">
+          </div>
+          <div>
+            <label>Max adverse move (%)</label>
+            <input id="adverse" type="number" step="0.1" value="2.5">
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="primary" onclick="previewPlan()">Preview plan</button>
+          <input id="liveword" placeholder="LIVE (only when connected to --live daemon)" style="max-width:280px">
+          <button class="danger" onclick="killAll()">Kill all</button>
+        </div>
+        <div id="preview" class="status" style="margin-top:9px"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="k">Depth / Footprint Curve (Jupiter Live Quotes)</div>
+        <div id="depth" class="scroll" style="margin-top:8px">
+          <div class="sub">Click "Depth curve" above to compute real-time price impact slices.</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="k">Active Plans</div>
+        <div id="plans" class="scroll" style="margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="k">Fill Tape (Paper / Live)</div>
+        <div id="fills" class="scroll" style="margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="k">Execution Safeguards</div>
+        <div class="status" style="line-height:1.6; margin-top:6px">
+          Punt OEMS asks 6 essential questions before executing <em>each child order</em>:
+          <ul style="margin:6px 0 6px 18px; padding:0">
+            <li>Is liquidity &gt; $250K floor?</li>
+            <li>Is DexScreener / GeckoTerminal divergence &lt; 5%?</li>
+            <li>Has Token-2022 transfer fee altered?</li>
+            <li>Has price drifted &gt; 2.5% from arrival price?</li>
+            <li>Is child quote inside maximum impact budget?</li>
+            <li>Did Jupiter order deteriorate before signing?</li>
+          </ul>
+          If any condition is violated, the plan pauses immediately rather than chasing.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = x => x == null || isNaN(x) ? '—' : '$' + Number(x).toLocaleString(undefined, { maximumFractionDigits: x < 10 ? 5 : 0 });
+const pct = x => x == null || isNaN(x) ? '—' : (Number(x) * 100).toFixed(2) + '%';
+const pnum = x => x == null || isNaN(x) ? '—' : Number(x).toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+const INSTRUMENTS = {
+  ZCAT: {
+    name: "ZCAT",
+    mint: "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    expectedTransferFeeBps: 300,
+    decimals: 9
+  },
+  BTCAT: {
+    name: "Buy The Cat (BTC)",
+    mint: "E4Ap4icMLwKot8rkkTbq5JkS5kZxt5XCE3yfxbzYBjHx",
+    expectedTransferFeeBps: null,
+    decimals: 9
+  }
+};
+
+const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const RPC_URL = "https://api.mainnet-beta.solana.com";
+
+let currentMint = INSTRUMENTS.ZCAT.mint;
+let currentSymbol = "ZCAT";
+let currentMarket = null;
+let currentCurve = [];
+let localDaemonAvailable = false;
+
+// Client-side storage for paper plans and fills
+let localPlans = JSON.parse(localStorage.getItem("punt_oems_plans") || "{}");
+let localFills = JSON.parse(localStorage.getItem("punt_oems_fills") || "[]");
+
+async function checkLocalDaemon() {
+  try {
+    const res = await fetch("http://127.0.0.1:8770/api/state", { mode: 'cors' });
+    if (res.ok) {
+      const data = await res.json();
+      localDaemonAvailable = true;
+      $('daemonStatus').textContent = "● Connected to local Python daemon (127.0.0.1:8770)";
+      $('daemonStatus').style.color = "var(--good)";
+      $('modeText').textContent = data.live ? "LIVE DAEMON · " + (data.pubkey || '') : "LOCAL DAEMON (PAPER)";
+      $('modeBadge').style.borderColor = data.live ? "#713b3b" : "#233527";
+      $('modeBadge').style.color = data.live ? "#f87171" : "var(--good)";
+      renderPlansAndFills(data.plans || {}, data.fills || []);
+      return true;
+    }
+  } catch (e) {}
+  localDaemonAvailable = false;
+  $('daemonStatus').textContent = "○ Standalone Web Client";
+  renderPlansAndFills(localPlans, localFills);
+  return false;
+}
+
+function onSymbolChange() {
+  const val = $('symbol').value;
+  if (val === "CUSTOM") {
+    $('customMintRow').style.display = "flex";
+  } else {
+    $('customMintRow').style.display = "none";
+    currentSymbol = val;
+    currentMint = INSTRUMENTS[val].mint;
+    refreshMarket();
+  }
+}
+
+function loadCustomMint() {
+  const mint = $('customMintInput').value.trim();
+  if (!mint) return;
+  currentSymbol = "CUSTOM";
+  currentMint = mint;
+  refreshMarket();
+}
+
+async function fetchJson(url, opt = {}) {
+  const r = await fetch(url, opt);
+  if (!r.ok) throw new Error(r.statusText || "Request failed");
+  return await r.json();
+}
+
+async function fetchToken2022State(mint) {
+  try {
+    const body = {
+      jsonrpc: "2.0", id: 1, method: "getAccountInfo",
+      params: [mint, { encoding: "jsonParsed", commitment: "confirmed" }]
+    };
+    const res = await fetchJson(RPC_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const val = res?.result?.value;
+    if (!val) return null;
+    const parsed = val.data?.parsed?.info;
+    const exts = parsed?.extensions || [];
+    const tf = exts.find(e => (e.extension || "").toLowerCase() === "transferfeeconfig");
+    let feeBps = null;
+    let configAuth = null;
+    let maxFeeRaw = null;
+    if (tf?.state) {
+      const newer = tf.state.newerTransferFee;
+      const older = tf.state.olderTransferFee;
+      const active = newer || older;
+      feeBps = active?.transferFeeBasisPoints ?? null;
+      maxFeeRaw = active?.maximumFee ?? null;
+      configAuth = tf.state.transferFeeConfigAuthority ?? null;
+    }
+    return {
+      decimals: parsed?.decimals || 9,
+      supply: parsed?.supply ? Number(parsed.supply) / 10**(parsed.decimals || 9) : null,
+      transferFee: feeBps != null ? { bps: feeBps, configAuthority: configAuth, maximumFeeRaw: maxFeeRaw } : null
+    };
+  } catch (e) {
+    console.warn("RPC fetch failed:", e);
+    return null;
+  }
+}
+
+async function refreshMarket() {
+  $('guard').textContent = "FETCHING...";
+  $('guard').className = "v warn";
+  try {
+    // 1. DexScreener
+    const dexRes = await fetchJson(`https://api.dexscreener.com/token-pairs/v1/solana/${currentMint}`);
+    const pairs = (dexRes || []).filter(p => p.chainId === "solana");
+    const bestDex = pairs.sort((a,b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0] || {};
+    const isBase = (bestDex.baseToken?.address || "") === currentMint;
+    const price = isBase ? Number(bestDex.priceUsd) : (Number(bestDex.priceUsd) / (Number(bestDex.priceNative) || 1));
+
+    // 2. GeckoTerminal
+    let geckoPrice = null;
+    try {
+      const geckoRes = await fetchJson(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${currentMint}/pools?page=1`);
+      const gPools = geckoRes?.data || [];
+      if (gPools.length > 0) {
+        const topPool = gPools.sort((a,b) => Number(b.attributes?.reserve_in_usd || 0) - Number(a.attributes?.reserve_in_usd || 0))[0];
+        const baseId = (topPool.relationships?.base_token?.data?.id || "").split("_").pop();
+        geckoPrice = baseId === currentMint ? Number(topPool.attributes?.base_token_price_usd) : Number(topPool.attributes?.quote_token_price_usd);
+      }
+    } catch (e) {}
+
+    // 3. Token-2022 RPC state
+    const contract = await fetchToken2022State(currentMint);
+
+    const divergence = (price && geckoPrice) ? Math.abs(price / geckoPrice - 1) * 100 : null;
+    const liq = Number(bestDex.liquidity?.usd || 0);
+    const v5 = Number(bestDex.volume?.m5 || 0);
+    const v1 = Number(bestDex.volume?.h1 || 0);
+    const v24 = Number(bestDex.volume?.h24 || 0);
+    const mc = Number(bestDex.marketCap || bestDex.fdv || (price && contract?.supply ? price * contract.supply : 0));
+
+    currentMarket = {
+      symbol: currentSymbol,
+      mint: currentMint,
+      price: price || 0,
+      geckoPrice,
+      sourceDivergencePct: divergence,
+      liquidity: liq,
+      volume5m: v5,
+      volume1h: v1,
+      volume24h: v24,
+      marketCap: mc,
+      turnoverMc: (v24 && mc) ? (v24 / mc) : null,
+      liquidityMc: (liq && mc) ? (liq / mc) : null,
+      contract: contract
+    };
+
+    renderMarketUI(currentMarket);
+    $('lastSync').textContent = "Synced " + new Date().toLocaleTimeString();
+  } catch (err) {
+    console.error(err);
+    $('guard').textContent = "ERROR";
+    $('guard').className = "v bad";
+  }
+}
+
+function renderMarketUI(m) {
+  $('price').textContent = money(m.price);
+  $('mc').textContent = money(m.marketCap);
+  $('liq').textContent = money(m.liquidity);
+  $('vol').textContent = money(m.volume5m) + ' / ' + money(m.volume1h);
+  $('tmc').textContent = '24h turnover/MC ' + pct(m.turnoverMc);
+  $('lmc').textContent = 'liquidity/MC ' + pct(m.liquidityMc);
+  $('div').textContent = (m.geckoPrice ? 'GT ' + money(m.geckoPrice) + ' · ' : '') + 'div ' + (m.sourceDivergencePct != null ? m.sourceDivergencePct.toFixed(2) + '%' : '—');
+
+  const f = m.contract?.transferFee;
+  $('tax').textContent = f ? f.bps + ' bps' : 'none / unresolved';
+  $('authority').textContent = f ? 'config: ' + (f.configAuthority ? f.configAuthority.slice(0,8)+'…' : 'null') : '';
+  $('fee').textContent = f && m.volume24h ? 'tax-flow proxy ' + money(m.volume24h * f.bps / 10000) : '24h ' + money(m.volume24h);
+
+  const good = (m.sourceDivergencePct == null || m.sourceDivergencePct < 5.0) && (m.liquidity >= 250000);
+  $('guard').textContent = good ? 'CLEAR' : 'CAUTION';
+  $('guard').className = 'v ' + (good ? 'good' : 'warn');
+}
+
+async function quoteJupiter(inMint, outMint, amountRaw) {
+  const q = new URLSearchParams({
+    inputMint: inMint,
+    outputMint: outMint,
+    amount: String(Math.floor(amountRaw)),
+    slippageBps: "50"
+  });
+  const res = await fetchJson(`https://lite-api.jup.ag/swap/v1/quote?${q.toString()}`);
+  const route = (res.routePlan || []).map(r => r.swapInfo?.label).filter(Boolean);
+  return {
+    inAmount: Number(res.inAmount),
+    outAmount: Number(res.outAmount),
+    priceImpactPct: Number(res.priceImpactPct || 0) * 100.0,
+    route: [...new Set(route)].join(" → ")
+  };
+}
+
+async function fetchDepthCurve() {
+  if (!currentMarket || !currentMarket.price) {
+    await refreshMarket();
+  }
+  const side = $('side').value;
+  const points = [250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+  $('depth').innerHTML = `<div class="sub">Quoting live Jupiter routes for ${side} ${currentSymbol}...</div>`;
+
+  const dec = currentMarket?.contract?.decimals || 9;
+  const rows = [];
+
+  for (const usd of points) {
+    try {
+      let q;
+      let eff;
+      if (side === "BUY") {
+        const inRaw = usd * 1e6; // USDC
+        q = await quoteJupiter(USDC, currentMint, inRaw);
+        const outTok = q.outAmount / 10**dec;
+        eff = outTok > 0 ? (usd / outTok) : null;
+      } else {
+        const tok = usd / currentMarket.price;
+        const inRaw = tok * 10**dec;
+        q = await quoteJupiter(currentMint, USDC, inRaw);
+        const outUsd = q.outAmount / 1e6;
+        eff = tok > 0 ? (outUsd / tok) : null;
+      }
+      rows.push({ usd, impactBps: q.priceImpactPct * 100, eff, route: q.route });
+    } catch (e) {
+      rows.push({ usd, error: e.message });
+    }
+  }
+
+  currentCurve = rows;
+  let html = '<table><tr><th>USD</th><th>Impact</th><th>Effective</th><th>Route</th></tr>';
+  for (const r of rows) {
+    html += `<tr><td>${money(r.usd)}</td><td>${r.error ? '<span class="bad">ERR</span>' : (r.impactBps || 0).toFixed(1) + ' bps'}</td><td>${money(r.eff)}</td><td>${r.route || r.error || ''}</td></tr>`;
+  }
+  html += '</table>';
+  $('depth').innerHTML = html;
+}
+
+function previewPlan() {
+  if (!currentMarket || !currentMarket.price) {
+    alert("Market data not ready yet.");
+    return;
+  }
+  const side = $('side').value;
+  const notional = Number($('notional').value) || 5000;
+  const mode = $('algo').value;
+  const maxImpact = Number($('impact').value) || 50;
+  const maxPart = Number($('part').value) || 2.0;
+  const minSlice = Number($('minslice').value) || 250;
+  const maxSlice = Number($('maxslice').value) || 5000;
+  const duration = Number($('duration').value) || 30;
+
+  let slice = maxSlice;
+  // Volume participation cap
+  const v5 = currentMarket.volume5m || 0;
+  if (v5 > 0) {
+    slice = Math.min(slice, v5 * (maxPart / 100));
+  }
+  slice = Math.max(minSlice, Math.min(slice, notional));
+  const nSlices = mode === "IMMEDIATE" ? 1 : Math.max(1, Math.ceil(notional / slice));
+  const interval = (mode === "IMMEDIATE" || nSlices <= 1) ? 0 : Math.max(15, Math.floor(duration * 60 / (nSlices - 1)));
+
+  const pid = String(Date.now()).slice(-6);
+  const plan = {
+    id: pid,
+    symbol: currentSymbol,
+    mint: currentMint,
+    side,
+    mode,
+    status: "PLANNED",
+    notionalUsd: notional,
+    remainingUsd: notional,
+    filledUsd: 0,
+    sliceUsd: slice,
+    slices: nSlices,
+    filledSlices: 0,
+    intervalSec: interval,
+    maxImpactBps: maxImpact,
+    maxParticipationPct: maxPart,
+    minSliceUsd: minSlice,
+    maxSliceUsd: maxSlice,
+    arrivalPrice: currentMarket.price,
+    created: Date.now()
+  };
+
+  $('preview').innerHTML = `Plan <span class="mono">#${pid}</span>: ${nSlices} child order${nSlices>1?'s':''}, target ${money(slice)} each, ~${interval}s cadence. <button class="small primary" onclick="startPlan('${pid}')">START</button>`;
+  
+  if (!localDaemonAvailable) {
+    localPlans[pid] = plan;
+    saveLocalState();
+    renderPlansAndFills(localPlans, localFills);
+  }
+}
+
+function startPlan(pid) {
+  if (localDaemonAvailable) {
+    fetch("http://127.0.0.1:8770/api/plan/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: pid, confirm: $('liveword').value })
+    }).then(r => r.json()).then(() => checkLocalDaemon()).catch(e => alert(e.message));
+    return;
+  }
+
+  const p = localPlans[pid];
+  if (!p) return;
+  p.status = "WORKING";
+  p.nextAction = Date.now();
+  saveLocalState();
+  renderPlansAndFills(localPlans, localFills);
+}
+
+function actPlan(pid, status) {
+  if (localDaemonAvailable) {
+    fetch("http://127.0.0.1:8770/api/plan/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: pid, status })
+    }).then(() => checkLocalDaemon());
+    return;
+  }
+  if (localPlans[pid]) {
+    localPlans[pid].status = status;
+    saveLocalState();
+    renderPlansAndFills(localPlans, localFills);
+  }
+}
+
+function killAll() {
+  if (!confirm("Cancel all open plans?")) return;
+  if (localDaemonAvailable) {
+    fetch("http://127.0.0.1:8770/api/kill", { method: "POST" }).then(() => checkLocalDaemon());
+    return;
+  }
+  for (const k in localPlans) {
+    if (localPlans[k].status === "WORKING" || localPlans[k].status === "PLANNED") {
+      localPlans[k].status = "CANCELED";
+    }
+  }
+  saveLocalState();
+  renderPlansAndFills(localPlans, localFills);
+}
+
+function saveLocalState() {
+  localStorage.setItem("punt_oems_plans", JSON.stringify(localPlans));
+  localStorage.setItem("punt_oems_fills", JSON.stringify(localFills));
+}
+
+function renderPlansAndFills(plans, fills) {
+  const pList = Object.values(plans).sort((a,b) => (b.created||0) - (a.created||0));
+  let pHtml = '<table><tr><th>ID</th><th>Order</th><th>Status</th><th>Filled</th><th>Child</th><th>Action</th></tr>';
+  for (const p of pList) {
+    pHtml += `<tr><td class="mono">#${p.id}</td><td>${p.side} ${p.symbol}<br>${money(p.notionalUsd)}</td><td><span class="${p.status==='WORKING'?'good':(p.status==='PAUSED'?'warn':'')}">${p.status}</span>${p.error?'<br><span class="bad">'+p.error+'</span>':''}</td><td>${money(p.filledUsd)} / ${money(p.notionalUsd)}</td><td>${money(p.sliceUsd)}<br>${p.intervalSec}s</td><td><button class="small" onclick="actPlan('${p.id}','PAUSED')">Pause</button> <button class="small danger" onclick="actPlan('${p.id}','CANCELED')">Cancel</button></td></tr>`;
+  }
+  pHtml += '</table>';
+  $('plans').innerHTML = pList.length ? pHtml : '<div class="sub">No open plans.</div>';
+
+  let fHtml = '<table><tr><th>Time</th><th>Fill</th><th>Impact</th><th>Route</th></tr>';
+  for (const f of fills.slice(0, 50)) {
+    fHtml += `<tr><td>${new Date((f.time||Date.now()/1000)*1000).toLocaleTimeString()}</td><td><span class="good">${f.paper?'PAPER':'LIVE'}</span> ${f.side} ${f.symbol} ${money(f.usd)}</td><td>${(f.impactBps||0).toFixed(1)} bps</td><td>${f.route||''}</td></tr>`;
+  }
+  fHtml += '</table>';
+  $('fills').innerHTML = fills.length ? fHtml : '<div class="sub">No fills recorded yet.</div>';
+}
+
+// Browser paper execution engine
+setInterval(() => {
+  if (localDaemonAvailable) return;
+  const now = Date.now();
+  for (const pid in localPlans) {
+    const p = localPlans[pid];
+    if (p.status === "WORKING" && (p.nextAction || 0) <= now) {
+      // Execute a paper slice
+      const fillAmount = Math.min(p.sliceUsd, p.remainingUsd);
+      const fill = {
+        time: Math.floor(now / 1000),
+        planId: p.id,
+        symbol: p.symbol,
+        side: p.side,
+        usd: fillAmount,
+        paper: true,
+        impactBps: Math.random() * 25 + 10,
+        route: "Raydium CPMM → Orca Whirlpool"
+      };
+      localFills.unshift(fill);
+      p.filledUsd += fillAmount;
+      p.remainingUsd = Math.max(0, p.notionalUsd - p.filledUsd);
+      p.filledSlices += 1;
+      p.lastAction = now;
+      if (p.remainingUsd <= Math.max(1, p.minSliceUsd * 0.05)) {
+        p.status = "FILLED";
+      } else {
+        const jitter = 0.82 + Math.random() * 0.36;
+        p.nextAction = now + (p.intervalSec * 1000 * jitter);
+      }
+      saveLocalState();
+      renderPlansAndFills(localPlans, localFills);
+    }
+  }
+}, 1000);
+
+async function boot() {
+  await checkLocalDaemon();
+  await refreshMarket();
+  setInterval(checkLocalDaemon, 6000);
+  setInterval(refreshMarket, 15000);
+}
+
+boot();
+</script>
+</body>
+</html>

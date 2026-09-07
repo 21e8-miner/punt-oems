@@ -2,6 +2,24 @@
 
 > **A first proper Solana Punt OEMS (Order Execution Management System), generalized beyond ZCAT so you can use the same execution layer for new StonkFun punts.**
 
+---
+
+## 🚀 Live Shareable Web App
+
+Open the live scanner and adaptive execution simulator directly in your browser (no installation or download required):
+
+### **[https://21e8-miner.github.io/punt-oems/](https://21e8-miner.github.io/punt-oems/)**
+
+---
+
+## 📦 Direct Standalone Downloads
+
+- **Direct Bundle (.zip)**: [punt_oems_bundle.zip](https://github.com/21e8-miner/punt-oems/releases/latest/download/punt_oems_bundle.zip)
+- **GitHub Release (v1.0.0)**: [Release v1.0.0](https://github.com/21e8-miner/punt-oems/releases/tag/v1.0.0)
+- **Source Code Archive**: [main.zip](https://github.com/21e8-miner/punt-oems/archive/refs/heads/main.zip)
+
+---
+
 Local Solana scanner, execution planner, and paper/live child-order runner. Starts in paper mode by default with zero external dependencies, and never sends a live transaction unless explicitly armed with `--live`, credentials, and manual confirmation.
 
 ```

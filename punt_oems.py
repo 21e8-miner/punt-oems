@@ -698,9 +698,20 @@ class Handler(BaseHTTPRequestHandler):
         raw = json.dumps(obj, default=str).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, x-api-key")
         self.send_header("Content-Length", str(len(raw)))
         self.end_headers()
         self.wfile.write(raw)
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, x-api-key")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def body(self) -> dict[str, Any]:
         n = int(self.headers.get("Content-Length") or 0)
@@ -711,7 +722,8 @@ class Handler(BaseHTTPRequestHandler):
             u = urllib.parse.urlparse(self.path)
             q = urllib.parse.parse_qs(u.query)
             if u.path == "/":
-                raw = HTML.encode()
+                index_file = BASE / "index.html"
+                raw = index_file.read_bytes() if index_file.exists() else HTML.encode()
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(raw)))
